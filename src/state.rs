@@ -136,6 +136,27 @@ impl GlobalState {
         self.process_deposit(deposit);
     }
 
+    pub fn preview_user_rewards(&self, user: Address, block_number: U64) -> U256 {
+        let user_record = self.user_records.get(&user);
+
+        if user_record.is_none() {
+            return U256::from(0);
+        }
+
+        let user_record = user_record.unwrap();
+
+        let rewards_per_block = U256::from("1000000000000000000000000000");
+        let pending_rewards =
+            U256::from((block_number - self.last_accounted_block).as_u64()) * rewards_per_block;
+        let pending_rewards_per_share_staked = pending_rewards / self.total_shares_staked;
+
+        let user_rewards = (self.total_rewards_per_share + pending_rewards_per_share_staked
+            - user_record.rewards_per_share_snapshot)
+            * user_record.shares_staked;
+
+        user_rewards
+    }
+
     fn distribute_rewards(&mut self, block_number: U64) {
         if self.last_accounted_block >= block_number || self.total_shares_staked == U256::from(0) {
             return;
