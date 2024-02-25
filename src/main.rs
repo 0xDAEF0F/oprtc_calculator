@@ -113,5 +113,18 @@ async fn main() -> Result<()> {
     println!("total_rewards_expected: {}", total_rewards_expected);
     println!("total_rewards_given: {}", total_rewards_given);
 
+    let all_user_rewards = global_state.get_user_rewards(curr_block_number);
+
+    let total_rewards_given: f64 = total_rewards_given.parse().unwrap();
+    let mut max_pct: f64 = 0.0;
+    for (addr, rewards) in all_user_rewards {
+        let rewards: f64 = format_ether(rewards).parse().unwrap();
+        let pct = rewards * 100.0 / total_rewards_given;
+        max_pct += pct;
+        println!("{} — {}", addr, pct);
+    }
+
+    println!("Total %: {}", max_pct);
+
     Ok(())
 }

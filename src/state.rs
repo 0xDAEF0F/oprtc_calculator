@@ -176,6 +176,22 @@ impl GlobalState {
         rewards
     }
 
+    pub fn get_user_rewards(&self, block_number: U64) -> Vec<(Address, U256)> {
+        let mut records: Vec<_> = self
+            .user_records
+            .keys()
+            .map(|addr| {
+                let rewards = self.preview_user_rewards(*addr, block_number);
+                (*addr, rewards)
+            })
+            .filter(|(_, r)| !r.is_zero())
+            .collect();
+
+        records.sort_by_key(|&(_, num)| std::cmp::Reverse(num));
+
+        records
+    }
+
     fn distribute_rewards(&mut self, block_number: U64) {
         if self.last_accounted_block >= block_number || self.total_shares_staked == U256::from(0) {
             return;
