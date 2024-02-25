@@ -2,6 +2,7 @@ use crate::state::{Deposit, Event, GlobalState, Transfer, Withdraw, BLOCK_CONTRA
 use ethers::{
     core::types::{Address, Filter, U256},
     providers::{Http, Middleware, Provider},
+    utils::{format_ether, parse_ether},
 };
 use eyre::Result;
 use std::sync::Arc;
@@ -100,7 +101,17 @@ async fn main() -> Result<()> {
     let mut global_state = GlobalState::new();
     global_state.process_events(all_events);
 
-    println!("{:?}", global_state);
+    let curr_block_number = client.get_block_number().await?;
+
+    let total_rewards_expected = U256::from((curr_block_number - BLOCK_CONTRACT_DEPLOYED).as_u64())
+        * parse_ether("1").unwrap();
+    let total_rewards = global_state.get_all_rewards(curr_block_number);
+
+    let total_rewards_expected = format_ether(total_rewards_expected);
+    let total_rewards_given = format_ether(total_rewards);
+
+    println!("total_rewards_expected: {}", total_rewards_expected);
+    println!("total_rewards_given: {}", total_rewards_given);
 
     Ok(())
 }
